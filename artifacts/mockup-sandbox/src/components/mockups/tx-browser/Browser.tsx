@@ -1,291 +1,565 @@
 import React from "react";
-import { 
-  Home, Globe, MessageSquare, Microscope, Network, Settings, 
-  Workflow, PenTool, Sparkles, Bot, Hexagon, Beaker,
-  Database, UserCircle, Bell, LayoutDashboard, ChevronRight,
-  ShieldCheck, BrainCircuit, Activity, Layers
+import {
+  Home, Globe, MessageSquare, Microscope, Network, Settings,
+  Workflow, PenTool, Sparkles, Bot, Hexagon, Search,
+  UserCircle, Bell, LayoutDashboard, ShieldCheck,
+  BrainCircuit, Activity, Layers, BookOpen, Cpu,
+  CheckCircle2, Clock, ChevronRight, X, Plus,
+  FileText, Zap, BarChart3
 } from "lucide-react";
 import "./_group.css";
 
+/* ─── Stone palette tokens ─────────────────────────────────────────── */
+const C = {
+  bg:           "#100e0c",
+  bgPanel:      "#191612",
+  bgRaised:     "#211d19",
+  bgHover:      "#2a2520",
+  border:       "#302b25",
+  borderLight:  "#3d3730",
+  stone:        "#c4a882",      // sandstone — primary accent
+  terra:        "#c4714a",      // terracotta — secondary accent
+  sage:         "#7fa882",      // sage green — success / active
+  ochre:        "#c49a3c",      // warm ochre — warning / highlight
+  textPrimary:  "#ede6db",      // warm cream
+  textSecondary:"#8a7e72",      // muted stone
+  textDim:      "#5c534a",      // very muted
+};
+
+/* ─── Sidebar nav items ─────────────────────────────────────────────── */
+const NAV = [
+  { icon: Home,         label: "Home" },
+  { icon: Globe,        label: "Browser" },
+  { icon: Microscope,   label: "Research Hub",  active: true },
+  { icon: MessageSquare,label: "AI Chat" },
+  { icon: Network,      label: "Knowledge" },
+  { icon: Workflow,     label: "Automation" },
+  { icon: PenTool,      label: "Creator" },
+  { icon: BarChart3,    label: "Analytics" },
+];
+
+const AGENTS = [
+  { icon: Search,      label: "Research",  color: C.stone,  anim: "animate-tx-pulse",       status: "Scanning papers" },
+  { icon: Layers,      label: "Synthesis", color: C.terra,  anim: "animate-tx-pulse-terra", status: "Building summary" },
+  { icon: ShieldCheck, label: "Fact Check",color: C.sage,   anim: "",                       status: "Waiting for draft", dim: true },
+];
+
+const SOURCES = [
+  { title: "Topological Qubits at Scale",     source: "Nature.com",          score: 98, scoreColor: C.sage,  scoreBg: "rgba(127,168,130,0.12)" },
+  { title: "Surface Code Error Correction",   source: "MIT Technology Review",score: 94, scoreColor: C.sage,  scoreBg: "rgba(127,168,130,0.12)" },
+  { title: "Neutral Atom Arrays — New Data",  source: "arXiv 2501.1448",     score: 87, scoreColor: C.ochre, scoreBg: "rgba(196,154,60,0.12)"  },
+];
+
+/* ─── Micro components ──────────────────────────────────────────────── */
+function Tab({ label, icon: Icon, active }: { label: string; icon: any; active?: boolean }) {
+  return (
+    <div
+      className="h-7 px-3 rounded-t-md flex items-center gap-2 text-[11px] font-medium relative cursor-pointer select-none transition-colors"
+      style={{
+        backgroundColor: active ? C.bgRaised : "transparent",
+        color: active ? C.textPrimary : C.textSecondary,
+        borderTop:    active ? `1px solid ${C.borderLight}` : "1px solid transparent",
+        borderLeft:   active ? `1px solid ${C.borderLight}` : "1px solid transparent",
+        borderRight:  active ? `1px solid ${C.borderLight}` : "1px solid transparent",
+        borderBottom: active ? `1px solid ${C.bgRaised}` : "1px solid transparent",
+      }}
+    >
+      <Icon className="w-3 h-3 flex-shrink-0" />
+      <span>{label}</span>
+      {active && (
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t"
+          style={{ backgroundColor: C.stone }} />
+      )}
+      {!active && <X className="w-2.5 h-2.5 ml-1 opacity-0 group-hover:opacity-100" />}
+    </div>
+  );
+}
+
+function SourceCard({ title, source, score, scoreColor, scoreBg }: typeof SOURCES[0]) {
+  return (
+    <div
+      className="rounded-lg p-3 flex flex-col gap-2 cursor-pointer transition-all"
+      style={{
+        backgroundColor: C.bgRaised,
+        border: `1px solid ${C.border}`,
+      }}
+    >
+      <div className="flex justify-between items-start gap-2">
+        <span className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: C.textDim }}>
+          {source}
+        </span>
+        <span
+          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+          style={{ color: scoreColor, backgroundColor: scoreBg }}
+        >
+          {score}
+        </span>
+      </div>
+      <p className="text-[11px] font-medium leading-snug" style={{ color: C.textPrimary }}>
+        {title}
+      </p>
+      <div className="flex items-center gap-1" style={{ color: C.textDim }}>
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-[9px]">Open source</span>
+      </div>
+    </div>
+  );
+}
+
+function AgentRow({ icon: Icon, label, color, anim, status, dim }: typeof AGENTS[0] & { dim?: boolean }) {
+  return (
+    <div
+      className="flex items-center gap-3 p-2.5 rounded-lg transition-all"
+      style={{
+        backgroundColor: C.bgRaised,
+        border: `1px solid ${C.border}`,
+        opacity: dim ? 0.5 : 1,
+      }}
+    >
+      <div
+        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: `${color}18`, border: `1px solid ${color}35` }}
+      >
+        <Icon className="w-3.5 h-3.5" style={{ color }} />
+      </div>
+      <div className="flex flex-col flex-1 min-w-0">
+        <span className="text-[11px] font-semibold" style={{ color: C.textPrimary }}>{label} Agent</span>
+        <span className="text-[10px] truncate" style={{ color: C.textSecondary }}>{status}</span>
+      </div>
+      {!dim && (
+        <div
+          className={`w-2 h-2 rounded-full flex-shrink-0 ${anim}`}
+          style={{ backgroundColor: color }}
+        />
+      )}
+      {dim && <Clock className="w-3 h-3 flex-shrink-0" style={{ color: C.textDim }} />}
+    </div>
+  );
+}
+
+/* ─── Knowledge graph ───────────────────────────────────────────────── */
+const NODES = [
+  { x: 100, y: 56,  r: 5, color: C.stone,  label: "Quantum" },
+  { x: 50,  y: 30,  r: 3, color: C.textSecondary, label: "Coherence" },
+  { x: 155, y: 28,  r: 3, color: C.terra,  label: "Error Corr." },
+  { x: 148, y: 76,  r: 3, color: C.sage,   label: "Topological" },
+  { x: 58,  y: 82,  r: 2, color: C.textDim, label: "NISQ" },
+  { x: 176, y: 50,  r: 2, color: C.textDim, label: "Anyon" },
+  { x: 26,  y: 56,  r: 2, color: C.textDim, label: "Fidelity" },
+  { x: 108, y: 96,  r: 2, color: C.ochre,  label: "Atom Array" },
+];
+const EDGES = [
+  { x1: 100, y1: 56, x2: 50,  y2: 30,  color: C.border,         anim: "" },
+  { x1: 100, y1: 56, x2: 155, y2: 28,  color: C.stone,          anim: "animate-tx-line" },
+  { x1: 100, y1: 56, x2: 148, y2: 76,  color: C.terra,          anim: "animate-tx-line" },
+  { x1: 100, y1: 56, x2: 58,  y2: 82,  color: C.border,         anim: "" },
+  { x1: 155, y1: 28, x2: 176, y2: 50,  color: C.border,         anim: "" },
+  { x1: 50,  y1: 30, x2: 26,  y2: 56,  color: C.border,         anim: "" },
+  { x1: 148, y1: 76, x2: 108, y2: 96,  color: C.ochre,          anim: "animate-tx-line-slow" },
+];
+
+/* ─── Main component ────────────────────────────────────────────────── */
 export function Browser() {
   return (
-    <div className="w-full h-screen overflow-hidden flex flex-col font-tx text-[#f0f2f7]" style={{ backgroundColor: "#0a0b0f" }}>
-      {/* 1. Top Navigation Bar */}
-      <div className="h-20 flex flex-col border-b border-[#2a2d3e]" style={{ backgroundColor: "#12141f" }}>
-        {/* Top Row */}
-        <div className="h-12 flex items-center px-4 justify-between">
-          <div className="flex items-center gap-4 w-1/4">
-            <div className="flex items-center gap-2 text-[#6366f1] font-bold text-xl tracking-tight">
-              <Hexagon className="w-6 h-6 fill-current opacity-80" />
-              <span>Tx</span>
-            </div>
+    <div
+      className="w-full h-screen overflow-hidden flex flex-col font-tx"
+      style={{ backgroundColor: C.bg, color: C.textPrimary }}
+    >
+      {/* ── 1. Top Navigation Bar ── */}
+      <div
+        className="flex-shrink-0 flex flex-col"
+        style={{ backgroundColor: C.bgPanel, borderBottom: `1px solid ${C.border}` }}
+      >
+        {/* Top row */}
+        <div className="h-12 flex items-center px-4 gap-4">
+          {/* Logo */}
+          <div className="flex items-center gap-2 flex-shrink-0 w-14">
+            <Hexagon className="w-5 h-5" style={{ color: C.stone, fill: `${C.stone}22` }} />
+            <span className="font-bold text-lg tracking-tight" style={{ color: C.stone }}>Tx</span>
           </div>
 
-          <div className="w-1/2 max-w-2xl flex justify-center">
-            <div className="w-full h-8 rounded-full border border-[#2a2d3e] bg-[#0a0b0f] flex items-center px-3 gap-2 shadow-[0_0_15px_rgba(99,102,241,0.1)] transition-all">
-              <ShieldCheck className="w-4 h-4 text-[#34d399]" />
-              <span className="text-[#6b7280] text-sm truncate flex-1">
-                <span className="text-[#6366f1]">tx://</span>research/quantum-computing
+          {/* Omnibox */}
+          <div className="flex-1 flex justify-center">
+            <div
+              className="w-full max-w-xl h-8 rounded-full flex items-center px-3 gap-2 transition-all"
+              style={{
+                backgroundColor: C.bgRaised,
+                border: `1px solid ${C.borderLight}`,
+                boxShadow: `0 0 0 0 ${C.stone}`,
+              }}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0" style={{ color: C.sage }} />
+              <span className="text-[12px] flex-1 truncate" style={{ color: C.textSecondary }}>
+                <span style={{ color: C.stone }}>tx://</span>research/quantum-computing
               </span>
-              <Sparkles className="w-4 h-4 text-[#6366f1] opacity-70" />
+              <Sparkles className="w-3.5 h-3.5 flex-shrink-0" style={{ color: C.stone, opacity: 0.6 }} />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-4 w-1/4">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-[#2a2d3e] bg-[#1a1d2e]">
-              <div className="w-2 h-2 rounded-full bg-[#6366f1] animate-tx-pulse" />
-              <span className="text-xs font-medium text-[#f0f2f7]">Gemini Ultra</span>
+          {/* Right controls */}
+          <div className="flex items-center gap-3 flex-shrink-0 w-auto">
+            {/* Model chip */}
+            <div
+              className="flex items-center gap-2 px-3 py-1 rounded-full"
+              style={{
+                backgroundColor: C.bgRaised,
+                border: `1px solid ${C.borderLight}`,
+              }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full animate-tx-pulse" style={{ backgroundColor: C.stone }} />
+              <span className="text-[11px] font-medium" style={{ color: C.textPrimary }}>Gemini Ultra</span>
+              <Cpu className="w-3 h-3" style={{ color: C.textDim }} />
             </div>
-            <div className="flex items-center gap-3 text-[#6b7280]">
-              <LayoutDashboard className="w-4 h-4 hover:text-[#f0f2f7] cursor-pointer transition-colors" />
-              <Bell className="w-4 h-4 hover:text-[#f0f2f7] cursor-pointer transition-colors" />
-              <div className="w-6 h-6 rounded-full bg-[#2a2d3e] flex items-center justify-center border border-[#6366f1]/30 text-[#f0f2f7]">
-                <UserCircle className="w-5 h-5" />
-              </div>
+            {/* Icons */}
+            <LayoutDashboard className="w-4 h-4 cursor-pointer transition-colors" style={{ color: C.textSecondary }} />
+            <Bell className="w-4 h-4 cursor-pointer transition-colors" style={{ color: C.textSecondary }} />
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center"
+              style={{
+                backgroundColor: C.bgRaised,
+                border: `1px solid ${C.stone}55`,
+              }}
+            >
+              <UserCircle className="w-5 h-5" style={{ color: C.textSecondary }} />
             </div>
           </div>
         </div>
 
-        {/* Tabs Row */}
-        <div className="h-8 px-4 flex items-end gap-2 text-xs font-medium">
-          <div className="h-7 px-4 rounded-t-lg bg-[#1a1d2e] border border-b-0 border-[#6366f1]/30 text-[#6366f1] flex items-center gap-2 relative">
-            <Microscope className="w-3 h-3" />
-            Quantum Research
-            <div className="absolute bottom-0 left-0 w-full h-[1px] bg-[#6366f1]" />
-          </div>
-          <div className="h-7 px-4 rounded-t-lg bg-transparent hover:bg-[#1a1d2e]/50 border border-transparent text-[#6b7280] flex items-center gap-2 cursor-pointer transition-colors">
-            <MessageSquare className="w-3 h-3" />
-            Architecture Planning
-          </div>
-          <div className="h-7 px-4 rounded-t-lg bg-transparent hover:bg-[#1a1d2e]/50 border border-transparent text-[#6b7280] flex items-center gap-2 cursor-pointer transition-colors">
-            <Database className="w-3 h-3" />
-            User Data Models
+        {/* Tab row */}
+        <div
+          className="flex items-end gap-0.5 px-4"
+          style={{ borderTop: `1px solid ${C.border}` }}
+        >
+          <Tab label="Quantum Research"     icon={Microscope}    active />
+          <Tab label="Architecture Planning" icon={MessageSquare} />
+          <Tab label="Market Intelligence"   icon={BarChart3} />
+          <Tab label="User Data Models"      icon={FileText} />
+          <div
+            className="mb-0.5 ml-2 p-1 rounded cursor-pointer"
+            style={{ color: C.textDim }}
+          >
+            <Plus className="w-3.5 h-3.5" />
           </div>
         </div>
       </div>
 
-      {/* Main Area */}
+      {/* ── 2. Body ── */}
       <div className="flex-1 flex overflow-hidden">
-        {/* 2. Left Sidebar */}
-        <div className="w-16 border-r border-[#2a2d3e] flex flex-col items-center py-4 justify-between" style={{ backgroundColor: "#12141f" }}>
-          <div className="flex flex-col gap-6">
-            <div className="p-2 rounded-lg text-[#6b7280] hover:text-[#f0f2f7] hover:bg-[#1a1d2e] cursor-pointer transition-all">
-              <Home className="w-5 h-5" />
-            </div>
-            <div className="p-2 rounded-lg text-[#6b7280] hover:text-[#f0f2f7] hover:bg-[#1a1d2e] cursor-pointer transition-all">
-              <Globe className="w-5 h-5" />
-            </div>
-            <div className="p-2 rounded-lg text-[#6366f1] bg-[#6366f1]/10 border border-[#6366f1]/20 cursor-pointer shadow-[0_0_10px_rgba(99,102,241,0.1)] relative">
-              <Microscope className="w-5 h-5" />
-              <div className="absolute inset-y-0 left-0 w-[2px] bg-[#6366f1] -ml-2 rounded-r" />
-            </div>
-            <div className="p-2 rounded-lg text-[#6b7280] hover:text-[#f0f2f7] hover:bg-[#1a1d2e] cursor-pointer transition-all">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <div className="p-2 rounded-lg text-[#6b7280] hover:text-[#f0f2f7] hover:bg-[#1a1d2e] cursor-pointer transition-all">
-              <Network className="w-5 h-5" />
-            </div>
-            <div className="p-2 rounded-lg text-[#6b7280] hover:text-[#f0f2f7] hover:bg-[#1a1d2e] cursor-pointer transition-all">
-              <Workflow className="w-5 h-5" />
-            </div>
-            <div className="p-2 rounded-lg text-[#6b7280] hover:text-[#f0f2f7] hover:bg-[#1a1d2e] cursor-pointer transition-all">
-              <PenTool className="w-5 h-5" />
-            </div>
+
+        {/* Left Sidebar */}
+        <div
+          className="w-14 flex-shrink-0 flex flex-col items-center py-3 gap-0 justify-between"
+          style={{ backgroundColor: C.bgPanel, borderRight: `1px solid ${C.border}` }}
+        >
+          <div className="flex flex-col gap-1 w-full px-2">
+            {NAV.map(({ icon: Icon, label, active }) => (
+              <div
+                key={label}
+                title={label}
+                className="relative w-full flex items-center justify-center p-2 rounded-lg cursor-pointer transition-all"
+                style={{
+                  backgroundColor: active ? `${C.stone}18` : "transparent",
+                  color: active ? C.stone : C.textDim,
+                }}
+              >
+                <Icon className="w-4.5 h-4.5 w-[18px] h-[18px]" />
+                {active && (
+                  <div
+                    className="absolute left-0 inset-y-1 w-0.5 rounded-r-full"
+                    style={{ backgroundColor: C.stone }}
+                  />
+                )}
+              </div>
+            ))}
           </div>
-          <div className="flex flex-col gap-6 items-center">
-            {/* AI Team indicators */}
-            <div className="flex flex-col gap-3">
-              <div className="w-8 h-8 rounded-full border border-[#2a2d3e] bg-[#0a0b0f] flex items-center justify-center relative">
-                <Bot className="w-4 h-4 text-[#22d3ee]" />
-                <div className="absolute top-0 right-0 w-2 h-2 bg-[#22d3ee] rounded-full animate-tx-pulse-cyan border border-[#0a0b0f]" />
-              </div>
-              <div className="w-8 h-8 rounded-full border border-[#2a2d3e] bg-[#0a0b0f] flex items-center justify-center relative">
-                <BrainCircuit className="w-4 h-4 text-[#6366f1]" />
-                <div className="absolute top-0 right-0 w-2 h-2 bg-[#6366f1] rounded-full animate-tx-pulse border border-[#0a0b0f]" />
-              </div>
+
+          {/* AI Team at bottom */}
+          <div className="flex flex-col items-center gap-2 px-2 pb-1">
+            <div className="w-full h-px" style={{ backgroundColor: C.border }} />
+            <div className="flex flex-col gap-2 pt-1">
+              {[
+                { icon: Bot,         color: C.stone, anim: "animate-tx-pulse",       title: "Research Agent" },
+                { icon: BrainCircuit,color: C.terra, anim: "animate-tx-pulse-terra", title: "Synthesis Agent" },
+                { icon: Zap,         color: C.ochre, anim: "animate-tx-pulse-ochre", title: "Engineer Agent" },
+              ].map(({ icon: Icon, color, anim, title }) => (
+                <div
+                  key={title}
+                  title={title}
+                  className="relative w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+                  style={{
+                    backgroundColor: C.bgRaised,
+                    border: `1px solid ${C.border}`,
+                  }}
+                >
+                  <Icon className="w-3.5 h-3.5" style={{ color }} />
+                  <div
+                    className={`absolute top-0 right-0 w-2 h-2 rounded-full ${anim}`}
+                    style={{
+                      backgroundColor: color,
+                      border: `1.5px solid ${C.bgPanel}`,
+                    }}
+                  />
+                </div>
+              ))}
             </div>
-            <div className="w-8 h-[1px] bg-[#2a2d3e]" />
-            <div className="p-2 rounded-lg text-[#6b7280] hover:text-[#f0f2f7] hover:bg-[#1a1d2e] cursor-pointer transition-all">
-              <Settings className="w-5 h-5" />
+            <div className="w-full h-px mt-1" style={{ backgroundColor: C.border }} />
+            <div
+              title="Settings"
+              className="p-2 rounded-lg cursor-pointer w-full flex justify-center"
+              style={{ color: C.textDim }}
+            >
+              <Settings className="w-[18px] h-[18px]" />
             </div>
           </div>
         </div>
 
-        {/* 3. Main Content Area */}
-        <div className="flex-1 flex">
-          {/* Left Column: Active Research */}
-          <div className="w-[60%] flex flex-col p-6 gap-4 overflow-y-auto">
+        {/* ── 3. Main Content ── */}
+        <div className="flex-1 flex overflow-hidden">
+
+          {/* Left 60% — Research Session */}
+          <div
+            className="flex flex-col overflow-y-auto"
+            style={{ width: "60%", padding: "20px 24px", gap: "16px", display: "flex", flexDirection: "column" }}
+          >
             {/* Deep Research Banner */}
-            <div className="rounded-lg border border-[#6366f1]/30 bg-[#1a1d2e]/80 p-3 flex items-center justify-between backdrop-blur relative overflow-hidden">
-              <div className="absolute inset-0 animate-tx-shimmer" />
-              <div className="relative z-10 flex items-center gap-3">
-                <Activity className="w-4 h-4 text-[#6366f1]" />
-                <span className="text-sm font-medium text-[#6366f1]">Deep Research Mode</span>
-                <span className="text-xs text-[#6b7280] ml-2">Analyzing 847 sources...</span>
+            <div
+              className="rounded-xl flex items-center justify-between px-4 py-2.5 relative overflow-hidden flex-shrink-0"
+              style={{
+                backgroundColor: `${C.stone}0d`,
+                border: `1px solid ${C.stone}40`,
+              }}
+            >
+              <div className="absolute inset-0 animate-tx-shimmer pointer-events-none" />
+              <div className="relative flex items-center gap-3">
+                <Activity className="w-4 h-4" style={{ color: C.stone }} />
+                <span className="text-[12px] font-semibold" style={{ color: C.stone }}>Deep Research Mode</span>
+                <span className="text-[11px]" style={{ color: C.textSecondary }}>Analyzing 847 sources…</span>
               </div>
-              <div className="relative z-10 flex gap-1">
-                <div className="w-1.5 h-1.5 bg-[#6366f1] rounded-full animate-tx-pulse" />
-                <div className="w-1.5 h-1.5 bg-[#6366f1] rounded-full animate-tx-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="w-1.5 h-1.5 bg-[#6366f1] rounded-full animate-tx-pulse" style={{ animationDelay: '0.4s' }} />
+              <div className="relative flex items-center gap-1.5">
+                {[0, 0.25, 0.5].map(delay => (
+                  <div
+                    key={delay}
+                    className="w-1.5 h-1.5 rounded-full animate-tx-pulse"
+                    style={{ backgroundColor: C.stone, animationDelay: `${delay}s` }}
+                  />
+                ))}
               </div>
             </div>
 
-            {/* Main Article Header */}
-            <div className="py-4">
-              <h1 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-[#6b7280] mb-2">
-                Quantum Computing Breakthroughs 2025
+            {/* Article header */}
+            <div className="flex-shrink-0" style={{ paddingBottom: "4px" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span
+                  className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: `${C.ochre}18`, color: C.ochre, border: `1px solid ${C.ochre}40` }}
+                >
+                  Auto-Brief
+                </span>
+                <span className="text-[10px]" style={{ color: C.textDim }}>Updated 2 mins ago</span>
+              </div>
+              <h1
+                className="text-3xl font-bold tracking-tight leading-tight mb-1"
+                style={{
+                  color: C.textPrimary,
+                  backgroundImage: `linear-gradient(135deg, ${C.textPrimary} 60%, ${C.textSecondary})`,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Quantum Computing<br />Breakthroughs 2025
               </h1>
-              <div className="flex items-center gap-4 text-xs text-[#6b7280]">
-                <span className="flex items-center gap-1"><UserCircle className="w-3 h-3" /> Auto-Generated Brief</span>
-                <span>•</span>
-                <span>Updated 2 mins ago</span>
-              </div>
             </div>
 
-            {/* Sources Cards */}
-            <div className="grid grid-cols-3 gap-4 mb-2">
-              {[
-                { title: "Topological Qubits at Scale", source: "Nature.com", score: 98, color: "text-[#34d399]", bg: "bg-[#34d399]/10" },
-                { title: "Error Correction Protocols", source: "MIT Tech Review", score: 94, color: "text-[#34d399]", bg: "bg-[#34d399]/10" },
-                { title: "Neutral Atom Arrays", source: "arXiv:2501.1448", score: 87, color: "text-[#22d3ee]", bg: "bg-[#22d3ee]/10" },
-              ].map((s, i) => (
-                <div key={i} className="rounded-lg border border-[#2a2d3e] bg-[#12141f] p-3 flex flex-col gap-2 hover:border-[#6366f1]/50 transition-colors cursor-pointer group">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[10px] text-[#6b7280] uppercase tracking-wider">{s.source}</span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${s.bg} ${s.color}`}>
-                      {s.score}
-                    </span>
-                  </div>
-                  <h3 className="text-xs font-medium text-[#f0f2f7] leading-snug group-hover:text-[#6366f1] transition-colors">{s.title}</h3>
-                </div>
-              ))}
+            {/* Source cards */}
+            <div className="grid grid-cols-3 gap-3 flex-shrink-0">
+              {SOURCES.map((s, i) => <SourceCard key={i} {...s} />)}
             </div>
 
-            {/* AI Synthesis Panel */}
-            <div className="flex-1 rounded-lg border border-[#2a2d3e] bg-[#12141f] flex flex-col overflow-hidden">
-              <div className="border-b border-[#2a2d3e] p-3 flex items-center justify-between bg-[#1a1d2e]/50">
+            {/* AI Synthesis panel */}
+            <div
+              className="flex-1 rounded-xl flex flex-col overflow-hidden"
+              style={{
+                backgroundColor: C.bgPanel,
+                border: `1px solid ${C.border}`,
+                minHeight: "220px",
+              }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
+                style={{ borderBottom: `1px solid ${C.border}`, backgroundColor: C.bgRaised }}
+              >
                 <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#6366f1]" />
-                  <span className="text-sm font-medium">AI Synthesis</span>
+                  <Layers className="w-3.5 h-3.5" style={{ color: C.stone }} />
+                  <span className="text-[12px] font-semibold" style={{ color: C.textPrimary }}>AI Synthesis</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px]" style={{ color: C.textDim }}>Gemini Ultra · 3.2s</span>
+                  <BookOpen className="w-3.5 h-3.5" style={{ color: C.textDim }} />
                 </div>
               </div>
-              <div className="p-5 text-[#f0f2f7] text-sm leading-relaxed space-y-4">
-                <p>
-                  Recent advancements in 2025 have shifted the quantum computing paradigm from noisy intermediate-scale quantum (NISQ) devices towards fault-tolerant architectures.
+              <div className="p-5 flex flex-col gap-4 overflow-y-auto" style={{ color: C.textPrimary }}>
+                <p className="text-[13px] leading-relaxed" style={{ color: C.textSecondary }}>
+                  Recent advances in 2025 have shifted the quantum computing paradigm away from noisy intermediate-scale
+                  quantum (NISQ) devices toward fault-tolerant, error-corrected architectures capable of commercial workloads.
                 </p>
-                <p>
-                  The critical breakthrough involves topological qubits demonstrating a coherence time improvement of 400x compared to last year's benchmarks. This is largely attributed to non-Abelian anyon braiding in 2D electron gases.
+                <p className="text-[13px] leading-relaxed" style={{ color: C.textSecondary }}>
+                  The pivotal breakthrough centers on topological qubits achieving coherence time improvements of{" "}
+                  <span style={{ color: C.stone, fontWeight: 600 }}>400x</span> over prior benchmarks, enabled by
+                  non-Abelian anyon braiding in 2D electron gas heterostructures. Surface code implementations now
+                  sustain logical error rates below{" "}
+                  <span style={{ color: C.stone, fontWeight: 600 }}>10⁻⁶</span> — the threshold for practical computation.
                 </p>
-                <p className="text-[#6366f1]">
+                <p className="text-[13px] leading-relaxed" style={{ color: C.stone }}>
                   Building executive summary
-                  <span className="inline-block w-2 h-4 bg-[#6366f1] ml-1 align-middle animate-tx-blink" />
+                  <span
+                    className="inline-block w-[2px] h-[14px] ml-1 align-middle rounded-sm animate-tx-blink"
+                    style={{ backgroundColor: C.stone }}
+                  />
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Right Column: AI Intelligence Panel */}
-          <div className="w-[40%] border-l border-[#2a2d3e] bg-[#12141f] flex flex-col">
-            {/* Header */}
-            <div className="h-14 border-b border-[#2a2d3e] flex items-center justify-between px-4">
-              <span className="text-sm font-medium tracking-wide">Intelligence Layer</span>
-              <div className="flex gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#6366f1] animate-tx-pulse" />
-                <div className="w-2 h-2 rounded-full bg-[#22d3ee] animate-tx-pulse-cyan" />
+          {/* Right 40% — Intelligence Panel */}
+          <div
+            className="flex flex-col flex-shrink-0 overflow-hidden"
+            style={{
+              width: "40%",
+              backgroundColor: C.bgPanel,
+              borderLeft: `1px solid ${C.border}`,
+            }}
+          >
+            {/* Panel header */}
+            <div
+              className="h-12 flex items-center justify-between px-4 flex-shrink-0"
+              style={{ borderBottom: `1px solid ${C.border}`, backgroundColor: C.bgRaised }}
+            >
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="w-4 h-4" style={{ color: C.stone }} />
+                <span className="text-[12px] font-semibold" style={{ color: C.textPrimary }}>Intelligence Layer</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full animate-tx-pulse"       style={{ backgroundColor: C.stone }} />
+                <div className="w-1.5 h-1.5 rounded-full animate-tx-pulse-terra" style={{ backgroundColor: C.terra }} />
+                <div className="w-1.5 h-1.5 rounded-full animate-tx-pulse-sage"  style={{ backgroundColor: C.sage  }} />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
-              {/* Chat Thread */}
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#2a2d3e] flex-shrink-0 flex items-center justify-center text-[10px]">US</div>
-                  <div className="flex flex-col gap-1 pt-1">
-                    <span className="text-xs text-[#f0f2f7]">Highlight the specific improvements in error correction.</span>
+            <div className="flex-1 overflow-y-auto flex flex-col" style={{ gap: "0" }}>
+
+              {/* Chat thread */}
+              <div className="flex flex-col gap-4 p-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+                {/* User msg */}
+                <div className="flex gap-2.5 items-start">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold"
+                    style={{ backgroundColor: C.bgRaised, color: C.textSecondary, border: `1px solid ${C.borderLight}` }}
+                  >
+                    US
                   </div>
+                  <p className="text-[12px] pt-0.5 leading-relaxed" style={{ color: C.textPrimary }}>
+                    Highlight the specific improvements in error correction and compare to last year.
+                  </p>
                 </div>
-                
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#6366f1]/20 flex-shrink-0 flex items-center justify-center text-[10px] text-[#6366f1] border border-[#6366f1]/30">
-                    <Sparkles className="w-3 h-3" />
+
+                {/* AI reply */}
+                <div className="flex gap-2.5 items-start">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${C.stone}20`,
+                      border: `1px solid ${C.stone}40`,
+                    }}
+                  >
+                    <Sparkles className="w-3 h-3" style={{ color: C.stone }} />
                   </div>
-                  <div className="flex flex-col gap-2 pt-1">
-                    <span className="text-xs text-[#6b7280] font-medium">Tx Coordinator</span>
-                    <p className="text-sm text-[#f0f2f7] leading-relaxed">
-                      I've dispatched the Research Agent to scan recent arXiv preprints. The primary advancement is the implementation of surface codes using dynamic logical qubits.
+                  <div className="flex flex-col gap-2 flex-1">
+                    <span className="text-[10px] font-semibold" style={{ color: C.textDim }}>Tx Coordinator</span>
+                    <p className="text-[12px] leading-relaxed" style={{ color: C.textPrimary }}>
+                      Research Agent scanned 412 preprints. Surface codes now achieve logical error rates of
+                      10⁻⁶ — a <span style={{ color: C.stone, fontWeight: 600 }}>1,000x improvement</span> over
+                      last year's 10⁻³ baseline. The key enabler is dynamic decoding via a neural net trained on
+                      hardware noise profiles.
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="px-2 py-1 rounded bg-[#1a1d2e] border border-[#2a2d3e] text-[10px] text-[#6b7280]">
-                        <span className="text-[#6366f1]">Ref:</span> arXiv:2501.1448
-                      </span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["arXiv 2501.1448", "Nature Q. Inf.", "IBM QV 2024"].map(ref => (
+                        <span
+                          key={ref}
+                          className="text-[9px] px-2 py-0.5 rounded-full"
+                          style={{
+                            backgroundColor: C.bgRaised,
+                            color: C.textSecondary,
+                            border: `1px solid ${C.border}`,
+                          }}
+                        >
+                          {ref}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-[#2a2d3e] to-transparent" />
-
-              {/* Active Agents */}
-              <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider">Active Agents</span>
-                
-                <div className="flex items-center gap-3 p-2 rounded-lg border border-[#2a2d3e] bg-[#1a1d2e]/50">
-                  <div className="w-6 h-6 rounded-full bg-[#22d3ee]/20 flex items-center justify-center border border-[#22d3ee]/30">
-                    <Search className="w-3 h-3 text-[#22d3ee]" />
-                  </div>
-                  <div className="flex flex-col flex-1">
-                    <span className="text-xs font-medium">Research Agent</span>
-                    <span className="text-[10px] text-[#6b7280]">Scanning papers...</span>
-                  </div>
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] animate-tx-pulse-cyan mr-2" />
+              {/* Active Agents section */}
+              <div className="flex flex-col gap-2 p-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: C.textDim }}>
+                    Active Agents
+                  </span>
+                  <span
+                    className="text-[9px] px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: `${C.sage}18`, color: C.sage, border: `1px solid ${C.sage}35` }}
+                  >
+                    2 running
+                  </span>
                 </div>
-
-                <div className="flex items-center gap-3 p-2 rounded-lg border border-[#2a2d3e] bg-[#1a1d2e]/50">
-                  <div className="w-6 h-6 rounded-full bg-[#6366f1]/20 flex items-center justify-center border border-[#6366f1]/30">
-                    <PenTool className="w-3 h-3 text-[#6366f1]" />
-                  </div>
-                  <div className="flex flex-col flex-1">
-                    <span className="text-xs font-medium">Synthesis Agent</span>
-                    <span className="text-[10px] text-[#6b7280]">Building summary...</span>
-                  </div>
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#6366f1] animate-tx-pulse mr-2" />
-                </div>
-                
-                <div className="flex items-center gap-3 p-2 rounded-lg border border-[#2a2d3e] bg-[#1a1d2e]/50 opacity-60">
-                  <div className="w-6 h-6 rounded-full bg-[#34d399]/20 flex items-center justify-center border border-[#34d399]/30">
-                    <ShieldCheck className="w-3 h-3 text-[#34d399]" />
-                  </div>
-                  <div className="flex flex-col flex-1">
-                    <span className="text-xs font-medium">Fact Check Agent</span>
-                    <span className="text-[10px] text-[#6b7280]">Waiting for draft</span>
-                  </div>
-                </div>
+                {AGENTS.map(a => <AgentRow key={a.label} {...a} />)}
               </div>
 
-              {/* Knowledge Graph Mini */}
-              <div className="mt-auto h-40 rounded-lg border border-[#2a2d3e] bg-[#0a0b0f] relative overflow-hidden flex flex-col">
-                <div className="absolute top-2 left-2 z-10">
-                  <span className="text-[10px] font-medium text-[#6b7280] uppercase tracking-wider">Concept Graph</span>
+              {/* Knowledge Graph */}
+              <div className="p-4 flex flex-col gap-2 flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: C.textDim }}>
+                    Concept Graph
+                  </span>
+                  <span className="text-[9px]" style={{ color: C.textDim }}>8 nodes · live</span>
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center opacity-80">
-                  <svg viewBox="0 0 200 100" className="w-full h-full">
-                    {/* Lines */}
-                    <line x1="100" y1="50" x2="50" y2="30" stroke="#2a2d3e" strokeWidth="1" />
-                    <line x1="100" y1="50" x2="150" y2="30" stroke="#6366f1" strokeWidth="1" className="animate-tx-line" />
-                    <line x1="100" y1="50" x2="140" y2="70" stroke="#22d3ee" strokeWidth="1" className="animate-tx-line" />
-                    <line x1="100" y1="50" x2="60" y2="80" stroke="#2a2d3e" strokeWidth="1" />
-                    <line x1="150" y1="30" x2="170" y2="45" stroke="#2a2d3e" strokeWidth="1" />
-                    <line x1="50" y1="30" x2="30" y2="50" stroke="#2a2d3e" strokeWidth="1" />
-                    
+                <div
+                  className="flex-1 rounded-xl overflow-hidden relative"
+                  style={{
+                    backgroundColor: C.bg,
+                    border: `1px solid ${C.border}`,
+                    minHeight: "140px",
+                  }}
+                >
+                  <svg viewBox="0 0 200 110" className="w-full h-full" style={{ display: "block" }}>
+                    {/* Edges */}
+                    {EDGES.map((e, i) => (
+                      <line
+                        key={i}
+                        x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
+                        stroke={e.color}
+                        strokeWidth="0.8"
+                        className={e.anim || ""}
+                      />
+                    ))}
                     {/* Nodes */}
-                    <circle cx="100" cy="50" r="4" fill="#6366f1" />
-                    <circle cx="50" cy="30" r="3" fill="#6b7280" />
-                    <circle cx="150" cy="30" r="3" fill="#22d3ee" />
-                    <circle cx="140" cy="70" r="3" fill="#34d399" />
-                    <circle cx="60" cy="80" r="2.5" fill="#6b7280" />
-                    <circle cx="170" cy="45" r="2" fill="#6b7280" />
-                    <circle cx="30" cy="50" r="2" fill="#6b7280" />
+                    {NODES.map((n, i) => (
+                      <g key={i}>
+                        <circle cx={n.x} cy={n.y} r={n.r + 2} fill={n.color} fillOpacity="0.1" />
+                        <circle cx={n.x} cy={n.y} r={n.r} fill={n.color} />
+                        <text
+                          x={n.x} y={n.y - n.r - 2}
+                          textAnchor="middle"
+                          fontSize="4"
+                          fill={n.color}
+                          opacity="0.7"
+                          fontFamily="Space Grotesk, sans-serif"
+                        >
+                          {n.label}
+                        </text>
+                      </g>
+                    ))}
                   </svg>
                 </div>
               </div>
@@ -294,48 +568,54 @@ export function Browser() {
         </div>
       </div>
 
-      {/* 4. Bottom Status Bar */}
-      <div className="h-8 border-t border-[#2a2d3e] flex items-center justify-between px-4 text-[10px] text-[#6b7280]" style={{ backgroundColor: "#0a0b0f" }}>
-        <div className="flex items-center gap-4">
-          <span>847 sources indexed</span>
-          <span className="w-1 h-1 rounded-full bg-[#2a2d3e]" />
-          <span>12 agents active</span>
-          <span className="w-1 h-1 rounded-full bg-[#2a2d3e]" />
-          <span>3 workflows running</span>
-        </div>
-        
-        <div className="flex-1 flex justify-center max-w-[200px] mx-auto">
-          <div className="w-full h-1 bg-[#1a1d2e] rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#6366f1] to-[#22d3ee] w-[65%]" />
-          </div>
+      {/* ── 4. Bottom Status Bar ── */}
+      <div
+        className="h-7 flex items-center justify-between px-4 flex-shrink-0"
+        style={{
+          backgroundColor: C.bgPanel,
+          borderTop: `1px solid ${C.border}`,
+        }}
+      >
+        {/* Left stats */}
+        <div className="flex items-center gap-3">
+          {[
+            { icon: BookOpen, label: "847 sources" },
+            { icon: Bot,      label: "12 agents" },
+            { icon: Workflow, label: "3 workflows" },
+          ].map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center gap-1">
+              <Icon className="w-3 h-3" style={{ color: C.textDim }} />
+              <span className="text-[10px]" style={{ color: C.textSecondary }}>{label}</span>
+              <span className="text-[10px] ml-1" style={{ color: C.borderLight }}>·</span>
+            </div>
+          ))}
         </div>
 
+        {/* Center progress */}
         <div className="flex items-center gap-2">
-          <span>Project Tx v1.0 — Intelligence OS</span>
-          <div className="w-1.5 h-1.5 rounded-full bg-[#34d399] animate-tx-pulse-emerald" />
+          <div
+            className="w-32 h-1 rounded-full overflow-hidden"
+            style={{ backgroundColor: C.bgRaised }}
+          >
+            <div
+              className="h-full rounded-full animate-tx-progress"
+              style={{
+                backgroundImage: `linear-gradient(90deg, ${C.stone}, ${C.terra})`,
+              }}
+            />
+          </div>
+          <span className="text-[10px]" style={{ color: C.textDim }}>Indexing…</span>
+        </div>
+
+        {/* Right version */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px]" style={{ color: C.textDim }}>Project Tx v1.0 — Intelligence OS</span>
+          <div
+            className="w-1.5 h-1.5 rounded-full animate-tx-pulse-sage"
+            style={{ backgroundColor: C.sage }}
+          />
         </div>
       </div>
     </div>
-  );
-}
-
-// Minimal placeholder for the search icon missing from top imports
-function Search(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
   );
 }
